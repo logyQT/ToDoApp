@@ -1,30 +1,27 @@
 import React, { useState } from "react";
-import { View, TextInput, TouchableOpacity, Text, StyleSheet, KeyboardAvoidingView, Platform, Alert } from "react-native";
+import { View, TextInput, TouchableOpacity, Text, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTodos } from "../context/todoContext";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
-const AddTodoScreen = ({ navigation }) => {
-  const [taskText, setTaskText] = useState("");
-  const [deadline, setDeadline] = useState(null);
+const EditTodoScreen = ({ route, navigation }) => {
+  const { todo } = route.params;
+  const [taskText, setTaskText] = useState(todo.task);
+  const [deadline, setDeadline] = useState(todo.deadline ? new Date(todo.deadline) : null);
   const [showPicker, setShowPicker] = useState(false);
-  const { addTodo } = useTodos();
+  const { updateTodo } = useTodos();
 
-  const saveTask = () => {
-    if (!taskText.trim()) {
-      Alert.alert("Błąd", "Zadanie nie może być puste!");
-      return;
-    }
-    addTodo(taskText, deadline);
+  const handleUpdate = () => {
+    updateTodo(todo.id, taskText, deadline);
     navigation.goBack();
   };
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={styles.inner}>
-        <TextInput style={styles.input} placeholder="Wpisz nowe zadanie..." placeholderTextColor="#9CA3AF" value={taskText} onChangeText={setTaskText} autoFocus />
+        <TextInput style={styles.input} value={taskText} onChangeText={setTaskText} />
 
-        <TouchableOpacity style={styles.dateButton} onPress={() => setShowPicker((showPicker) => !showPicker)}>
+        <TouchableOpacity style={styles.dateButton} onPress={() => setShowPicker(true)}>
           <Text style={styles.dateButtonText}>{deadline ? deadline.toLocaleString() : "Ustaw deadline"}</Text>
           <MaterialIcons name="calendar-today" size={20} color="#ffffff" />
         </TouchableOpacity>
@@ -33,27 +30,22 @@ const AddTodoScreen = ({ navigation }) => {
           <DateTimePicker
             value={deadline || new Date()}
             mode="datetime"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
-            onChange={(event, selectedDate) => {
-              setShowPicker(Platform.OS === "ios");
-              if (selectedDate) {
-                setDeadline(selectedDate);
-              }
+            onChange={(e, date) => {
+              setShowPicker(false);
+              if (date) setDeadline(date);
             }}
-            minimumDate={new Date()}
           />
         )}
 
-        <TouchableOpacity style={styles.saveButton} onPress={saveTask}>
-          <MaterialIcons name="add-circle" size={24} color="#ffffff" />
-          <Text style={styles.saveButtonText}>Zapisz Zadanie</Text>
+        <TouchableOpacity style={styles.saveButton} onPress={handleUpdate}>
+          <Text style={styles.saveButtonText}>Zaktualizuj Zadanie</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
 };
 
-export { AddTodoScreen };
+export { EditTodoScreen };
 
 const styles = StyleSheet.create({
   container: {
